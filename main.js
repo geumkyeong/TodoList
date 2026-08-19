@@ -4,7 +4,13 @@ const todoList = document.getElementById("todoList");
 
 const checkbox = document.querySelector(".todo-checkbox");
 
+const TODO_LIST_KEY = "todo-list";
+
 let todos = [];
+
+function loadTodos() {
+  return JSON.parse(localStorage.getItem(TODO_LIST_KEY)) || [];
+}
 
 // 하나의 TODO 요소 추가하기
 function addTodo(todo) {
@@ -18,7 +24,7 @@ function addTodo(todo) {
   const checkbox = document.createElement("input");
   checkbox.type = "checkbox";
   checkbox.className = "todo-checkbox";
-  checkbox.checked = todo.done;
+  checkbox.checked = todo.done; // 로컬스토리지의 완료 상태(true/false)를 화면에 적용하기
   checkbox.id = `task${todo.id}`;
 
   const label = document.createElement("label");
@@ -31,10 +37,6 @@ function addTodo(todo) {
   removeBtn.textContent = "×";
   removeBtn.className = "delete-btn";
 
-  removeBtn.addEventListener("click", function () {
-    li.remove();
-  });
-
   leftGroup.appendChild(checkbox);
   leftGroup.appendChild(label);
 
@@ -44,44 +46,53 @@ function addTodo(todo) {
   todoList.appendChild(li);
 }
 
-// UI 업데이트
-function renderTodos(todos) {
-  todoList.innerHTML = "";  // UI 초기화
-
-  todos.forEach((todo) => addTodo(todo));
-}
-
 // 로컬 스토리지에 저장하기
 function saveTodos(todos) {
   try {
-    localStorage.setItem("todo-list", JSON.stringify(todos));
+    localStorage.setItem(TODO_LIST_KEY, JSON.stringify(todos));
   } catch (error) {
     console.error("로컬스토리지 백업 실패");
   }
 }
 
+// UI 업데이트
+function renderTodos(todos) {
+  todoList.innerHTML = ""; // UI 초기화
+
+  todos.forEach((todo) => addTodo(todo));
+}
+
+// 로컬스토리지에서 데이터를 지우고, 화면을 다시 그린다
+function deleteTodo(todoId) {
+  let todos = loadTodos();
+  // filter는 조건에 맞는 요소들을 모아 '새로운 배열'을 만든다.
+  todos = todos.filter((todo) => todo.id !== todoId);
+
+  saveTodos(todos);
+
+  renderTodos(todos);
+}
+
 // 초기 데이터 불러오기 & 화면 렌더링
 window.addEventListener("DOMContentLoaded", () => {
   try {
-    const storedTodos = localStorage.getItem("todo-list"); // 기존 데이터 가져오기
-
-    todos = storedTodos ? JSON.parse(storedTodos) : [];
-
-    renderTodos(todos);
+    todos = loadTodos();
   } catch (error) {
     console.error("로컬스토리지 불러오기 실패", error.name);
     todos = [];
   }
+
+  renderTodos(todos);
 });
 
 todoBtn.addEventListener("click", () => {
   const newText = todoInput.value.trim();
   if (!newText) return;
 
-  // 맨 끝 인덱스
+  // 가장 큰 ID 값
   const maxId = todos.length > 0 ? Math.max(...todos.map((t) => t.id)) : 0;
   const newTodo = {
-    id: maxId + 1, // 다음 인덱스
+    id: maxId + 1, // 다음 ID
     text: newText,
     done: false,
   };
@@ -104,22 +115,39 @@ todoList.addEventListener("change", (event) => {
   // 체크박스에서 이벤트 발생할 때
   if (event.target && event.target.type === "checkbox") {
     const checkboxId = event.target.id; // task1
-    console.log("id: ", checkboxId, "체크 여부: ", event.target.checked);
+    if (!checkboxId) return;
 
     // task 부분을 지우고, 남은 부분을 가져온다.
-    const idNumber = checkboxId.replace("task", "");
-    console.log(typeof idNumber); // STRING
+    const targetId = Number(checkboxId.replace("task", ""));
 
-    // 체크박스의 id 와 일치하는 todo 객체를 배열에서 가져온다.
-    const target = todos.find((todo) => todo.id === Number(idNumber));  
+    console.log("id: ", targetId, "체크 여부: ", event.target.checked);
+
+    // find는 조건에 맞는 객체 '하나'를 그대로 반환한다.
+    const target = todos.find((todo) => todo.id === targetId);
 
     if (target) {
-      target.done = !target.done; // 체크 상태 업데이트
+      target.done = event.target.checked; // 체크 상태 동기화
 
       saveTodos(todos); // 로컬 스토리지에 저장
-      
+
       renderTodos(todos); // UI 업데이트
     }
+  }
+});
+
+todoList.addEventListener("click", (event) => {
+  // 클릭된 요소가 삭제 버튼(.delete-btn) 일 때
+  if (event.target && event.target.classList.contains("delete-btn")) {
+    const li = event.target.closest(".todo-item"); // 가장 가까운 부모 요소 'li'를 찾는다.
+    if (!li) return;
+
+    const checkbox = li.querySelector(".todo-checkbox"); // 그 li 내부에서 checkbox 요소를 찾는다.
+    if (!checkbox) return;
+
+    const checkboxId = checkbox.id;
+    const targetId = Number(checkboxId.replace("task", ""));
+
+    deleteTodo(targetId); 
   }
 });
 
