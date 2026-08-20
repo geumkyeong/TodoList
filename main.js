@@ -64,7 +64,7 @@ function renderTodos(todos) {
 
 // 로컬스토리지에서 데이터를 지우고, 화면을 다시 그린다
 function deleteTodo(todoId) {
-  let todos = loadTodos();
+  todos = loadTodos();
   // filter는 조건에 맞는 요소들을 모아 '새로운 배열'을 만든다.
   todos = todos.filter((todo) => todo.id !== todoId);
 
@@ -119,8 +119,6 @@ todoList.addEventListener("change", (event) => {
 
     // task 부분을 지우고, 남은 부분을 가져온다.
     const targetId = Number(checkboxId.replace("task", ""));
-
-    console.log("id: ", targetId, "체크 여부: ", event.target.checked);
 
     // find는 조건에 맞는 객체 '하나'를 그대로 반환한다.
     const target = todos.find((todo) => todo.id === targetId);
