@@ -1,6 +1,6 @@
 # TodoList | 할 일 리스트
 
-<img width="480" height="270" alt="TodoList" src="https://github.com/user-attachments/assets/4894c7ab-e905-4a18-b516-6dd8f7e7fa12" />
+<img width="684" height="589" alt="image" src="https://github.com/user-attachments/assets/e2b79a79-91c3-4f22-a6f6-99bc10df292e" />
 
 **설명**
 
