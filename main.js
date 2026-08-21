@@ -1,11 +1,17 @@
 const todoInput = document.getElementById("todoInput");
 const todoBtn = document.getElementById("todoBtn");
-const todoList = document.getElementById("todoList");
+
+const container = document.querySelector(".todo-container");
+
+const todoList = document.getElementById("todo-list");
+const doneList = document.getElementById("done-list");
+const toggleBtn = document.getElementById("toggle-done-btn");
 
 const checkbox = document.querySelector(".todo-checkbox");
 
 const TODO_LIST_KEY = "todo-list";
 
+let isShowCompleted = false;
 let todos = [];
 
 function loadTodos() {
@@ -13,7 +19,7 @@ function loadTodos() {
 }
 
 // 하나의 TODO 요소 추가하기
-function addTodo(todo) {
+function addTodo(todo, isCompleted = false) {
   const li = document.createElement("li");
   li.className = "todo-item";
 
@@ -43,7 +49,12 @@ function addTodo(todo) {
   li.appendChild(leftGroup);
   li.appendChild(removeBtn);
 
-  todoList.appendChild(li);
+  // 매개변수의 값(true/false)에 따라 각각 다른 리스트에 todo 요소가 추가된다.
+  if (isCompleted) {
+    doneList.appendChild(li);
+  } else {
+    todoList.appendChild(li);
+  }
 }
 
 // 로컬 스토리지에 저장하기
@@ -55,17 +66,44 @@ function saveTodos(todos) {
   }
 }
 
+// 안내 메시지 생성 유틸 함수
+const createMessage = (text) => {
+  const li = document.createElement("li");
+  li.className = "empty-message";
+  li.textContent = text;
+  return li;
+};
+
 // UI 업데이트
 function renderTodos(todos) {
   todoList.innerHTML = ""; // UI 초기화
+  doneList.innerHTML = "";
+  
+  // todos라는 객체 배열을 돌면서, 특정 조건에 따라 객체들을 그룹별로 묶어 분류(Grouping)할 수 있다.
+  const { completed, incompleted } = todos.reduce(
+    (acc, todo) => {
+      if (todo.done) {
+        acc.completed.push(todo); // done이 true면, completed 배열에 추가
+      } else {
+        acc.incompleted.push(todo); // done이 false면, incompleted 배열에 추가
+      }
+      return acc;
+    },
+    { completed: [], incompleted: [] },
+  );
 
-  todos.forEach((todo) => addTodo(todo));
+  incompleted.forEach((todo) => addTodo(todo, false)); // 미완료된 할 일 리스트 보여주기
+
+  // isShowCompleted 가 true일 때,
+  if (isShowCompleted) {
+    completed.forEach((todo) => addTodo(todo, true)); // 완료된 할 일 리스트 보여주기
+  }
 }
 
 // 로컬스토리지에서 데이터를 지우고, 화면을 다시 그린다
 function deleteTodo(todoId) {
   todos = loadTodos();
-  // filter는 조건에 맞는 요소들을 모아 '새로운 배열'을 만든다.
+
   todos = todos.filter((todo) => todo.id !== todoId);
 
   saveTodos(todos);
@@ -111,16 +149,13 @@ todoBtn.addEventListener("click", () => {
   todoInput.focus();
 });
 
-todoList.addEventListener("change", (event) => {
-  // 체크박스에서 이벤트 발생할 때
+container.addEventListener("change", (event) => {
   if (event.target && event.target.type === "checkbox") {
     const checkboxId = event.target.id; // task1
     if (!checkboxId) return;
 
-    // task 부분을 지우고, 남은 부분을 가져온다.
     const targetId = Number(checkboxId.replace("task", ""));
 
-    // find는 조건에 맞는 객체 '하나'를 그대로 반환한다.
     const target = todos.find((todo) => todo.id === targetId);
 
     if (target) {
@@ -133,19 +168,18 @@ todoList.addEventListener("change", (event) => {
   }
 });
 
-todoList.addEventListener("click", (event) => {
-  // 클릭된 요소가 삭제 버튼(.delete-btn) 일 때
+container.addEventListener("click", (event) => {
   if (event.target && event.target.classList.contains("delete-btn")) {
     const li = event.target.closest(".todo-item"); // 가장 가까운 부모 요소 'li'를 찾는다.
     if (!li) return;
 
-    const checkbox = li.querySelector(".todo-checkbox"); // 그 li 내부에서 checkbox 요소를 찾는다.
+    const checkbox = li.querySelector(".todo-checkbox"); // 해당 li 내부에서 checkbox를 찾는다.
     if (!checkbox) return;
 
     const checkboxId = checkbox.id;
     const targetId = Number(checkboxId.replace("task", ""));
 
-    deleteTodo(targetId); 
+    deleteTodo(targetId);
   }
 });
 
@@ -154,4 +188,14 @@ todoInput.addEventListener("keydown", (event) => {
   if (event.key === "Enter") {
     todoBtn.click();
   }
+});
+
+//
+toggleBtn.addEventListener("click", () => {
+  isShowCompleted = !isShowCompleted; // true <-> false
+
+  toggleBtn.classList.toggle("active"); // 클릭할 때마다 active 클래스 추가/제거
+
+  // 화면을 새로 그린다.
+  renderTodos(todos);
 });

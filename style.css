@@ -12,19 +12,30 @@ body {
 }
 
 .todo-container {
-  max-width: 420px;
   width: 100%;
+  max-width: 420px;
 
   margin: 40px auto;
-
   padding: 18px;
 
   display: flex;
   flex-direction: column;
   gap: 16px;
 
-  /* 모바일에서 찌그러지지 않게 최소 너비 지정 */
   min-width: 280px;
+}
+
+.todo-container button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  
+  font-weight: 600;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  flex-shrink: 0; /* 찌그러짐 방지 */
 }
 
 /* 입력창, 버튼 영역 */
@@ -51,26 +62,34 @@ body {
   border-radius: 4px;
 }
 
+#todoInput::placeholder {
+  color: #ccc;
+}
+
 #todoBtn {
   width: 32px;
   height: 32px;
   font-size: 18px;
-  font-weight: 600;
-  color: #fff;
-  background: #333;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  flex-shrink: 0; /* 버튼 찌그러짐 방지 */
+  background-color: #333;
 }
 
 /* 리스트 영역 */
-#todoList {
-  min-height: 200px; /* 빈 리스트일 때 높이 유지 */
-  width: 100%; /* 부모 요소만큼 너비 차지 */
-  min-width: 280px; /* 최소 너비 지정 */
+#todo-list, #done-list {
+  min-height: 100px; 
+  width: 100%; 
+  min-width: 280px;
   margin-top: 20px;
   list-style: none;
+}
+
+/* todo-list가 비어있을 때 메시지를 띄운다 */
+#todo-list:empty::after {
+  content: "🎉 모든 할 일을 끝냈어요!";
+  display: block;
+  text-align: center;
+  padding: 24px 16px;
+  color: #b3b3b3;
+  font-size: 0.9rem;
 }
 
 .todo-item {
@@ -79,7 +98,7 @@ body {
   justify-content: space-between;
   align-items: center;
 
-  width: 100%; /* 부모 요소만큼 너비 차지 */
+  width: 100%;
   padding: 12px 0;
   border-bottom: 1px solid #eee;
 }
@@ -89,15 +108,14 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  /* 텍스트가 길어질 때 최대 너비 지정 */
   max-width: 220px;
 }
 
 .todo-checkbox {
-  appearance: none; /* 브라우저 기본 디자인 제거 */
-  -webkit-appearance: none; /* 구형 사파리 지원 */
+  appearance: none;
+  -webkit-appearance: none; 
 
-  border: 2px solid #ccc;
+  border: 2px solid #b3b3b3;
   border-radius: 3px;
   outline: none;
 
@@ -106,7 +124,6 @@ body {
   cursor: pointer;
   flex-shrink: 0;
 
-  /* 내부 요소를 정중앙에 정렬 */
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -114,17 +131,15 @@ body {
   transition: background-color 0.2s ease;
 }
 
-/* 체크되었을 때의 스타일 지정 */
 .todo-checkbox:checked {
-  border-color: #333;
+  border-color: #b3b3b3;
 }
 
-/* 체크되었을 때의 내부 요소의 형태 */
 .todo-checkbox:checked::before {
   content: "";
   width: 10px;
   height: 10px;
-  background-color: #333;
+  background-color: #b3b3b3;
   border-radius: 2px;
 }
 
@@ -132,40 +147,54 @@ body {
   font-size: 15px;
   line-height: 1;
   color: #333;
-  /* 최소 너비 유지하며 남은 공간을 채움*/
   flex: 1;
   min-width: 150px;
-  /* 텍스트가 길어질 때 말줄임표 표시 */
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
-/* 체크박스가 체크되면 텍스트에 취소선 적용 */
 .todo-checkbox:checked ~ .todo-text {
   text-decoration: line-through;
-  color: #888;
+  color: #ccc;
 }
 
 .delete-btn {
   width: 24px;
   height: 24px;
-  font-size: 18px;
-  font-weight: 600;
-  color: #fff;
-
-  /* 다른 요소들과 한 줄에 나란히 위치함 */
-  display: inline-flex;
-  /* 내부 요소를 정중앙으로 정렬 */
-  align-items: center;
-  justify-content: center;
-
+  font-size: 18px; 
   background-color: #e74c3c;
-  border-radius: 4px;
-  border: none;
-  cursor: pointer;
-  flex-shrink: 0; /* 버튼 찌그러짐 방지 */
   transition: background-color 0.2s;
 }
 
- 
+.button {
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.left-todo-group:has(.todo-checkbox:checked) ~ .delete-btn {
+  background-color: #eb8276;
+}
+
+#toggle-done-btn {
+  width: 20px;
+  height: 20px;
+  font-size: 15px;
+  background-color: #333;
+}
+
+#toggle-done-btn::after {
+  /* 아래 방향 화살표(▼) 형태 */
+  content: url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'10\' height=\'10\' viewBox=\'0 0 24 24\'><path d=\'M12 21l-12-18h24z\' fill=\'white\'/></svg>");
+  transition: transform 0.3s ease;
+}
+
+#toggle-done-btn.active::after {
+  transform: rotate(-180deg);
+}
+
+
+
+
